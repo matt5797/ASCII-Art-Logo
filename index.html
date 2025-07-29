@@ -212,6 +212,62 @@
             width: 100%;
         }
 
+        .custom-colors {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            border: 1px dashed #ccc;
+        }
+
+        .color-picker-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .color-picker-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .color-picker-group label {
+            font-weight: 500;
+            color: #495057;
+            min-width: 80px;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .color-picker-wrapper input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker-wrapper input[type="color"]::-webkit-color-swatch {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .color-preview {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            min-width: 60px;
+            text-align: center;
+        }
+
         .download-section {
             text-align: center;
             padding: 30px;
@@ -354,6 +410,27 @@
                             <input type="radio" name="theme" value="light-dark">
                             <span>흰 글씨 / 검은 배경</span>
                         </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="custom">
+                            <span>커스텀 색상</span>
+                        </label>
+                    </div>
+                    
+                    <div class="custom-colors" id="custom-colors" style="margin-top: 15px; display: none;">
+                        <div class="color-picker-group">
+                            <label for="text-color">글씨 색상:</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="text-color" value="#000000">
+                                <span class="color-preview" id="text-color-preview">#000000</span>
+                            </div>
+                        </div>
+                        <div class="color-picker-group">
+                            <label for="bg-color">배경 색상:</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="bg-color" value="#ffffff">
+                                <span class="color-preview" id="bg-color-preview">#ffffff</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -409,6 +486,8 @@
                 this.currentTheme = 'dark-light';
                 this.animationEnabled = false;
                 this.animationSpeed = 100;
+                this.customTextColor = '#000000';
+                this.customBgColor = '#ffffff';
                 
                 this.sampleCodes = {
                     cat: 'printf("  /\\_/\\\\  \\n");\nprintf(" ( o.o ) \\n");\nprintf("  > ^ <  \\n");\nprintf("  고양이  \\n");',
@@ -451,8 +530,41 @@
                 document.querySelectorAll('input[name="theme"]').forEach(radio => {
                     radio.addEventListener('change', (e) => {
                         this.currentTheme = e.target.value;
+                        this.toggleCustomColors(e.target.value === 'custom');
                         this.updatePreview();
                     });
+                });
+                
+                // Custom color pickers
+                document.getElementById('text-color').addEventListener('input', (e) => {
+                    this.customTextColor = e.target.value;
+                    document.getElementById('text-color-preview').textContent = e.target.value.toUpperCase();
+                    if (this.currentTheme === 'custom') {
+                        this.updatePreview();
+                    }
+                });
+                
+                document.getElementById('bg-color').addEventListener('input', (e) => {
+                    this.customBgColor = e.target.value;
+                    document.getElementById('bg-color-preview').textContent = e.target.value.toUpperCase();
+                    if (this.currentTheme === 'custom') {
+                        this.updatePreview();
+                    }
+                });
+                
+                // Auto-switch to custom when color picker is clicked
+                document.getElementById('text-color').addEventListener('click', () => {
+                    document.querySelector('input[value="custom"]').checked = true;
+                    this.currentTheme = 'custom';
+                    this.toggleCustomColors(true);
+                    this.updatePreview();
+                });
+                
+                document.getElementById('bg-color').addEventListener('click', () => {
+                    document.querySelector('input[value="custom"]').checked = true;
+                    this.currentTheme = 'custom';
+                    this.toggleCustomColors(true);
+                    this.updatePreview();
                 });
                 
                 // Animation controls
@@ -568,9 +680,15 @@
                 const themes = {
                     'dark-light': { text: '#000000', bg: '#ffffff' },
                     'green-dark': { text: '#00ff00', bg: '#000000' },
-                    'light-dark': { text: '#ffffff', bg: '#000000' }
+                    'light-dark': { text: '#ffffff', bg: '#000000' },
+                    'custom': { text: this.customTextColor, bg: this.customBgColor }
                 };
                 return themes[this.currentTheme];
+            }
+
+            toggleCustomColors(show) {
+                const customColorsDiv = document.getElementById('custom-colors');
+                customColorsDiv.style.display = show ? 'block' : 'none';
             }
 
             updateCanvasSize() {
@@ -761,7 +879,7 @@
                             quality: 10,
                             width: size,
                             height: size,
-                            transparent: colors.bg === '#ffffff' ? null : 0x000000,
+                            transparent: colors.bg === '#ffffff' || colors.bg.toLowerCase() === '#ffffff' ? null : 0x000000,
                             repeat: 0 // 무한 반복
                         });
                         
